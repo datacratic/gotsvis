@@ -1,0 +1,14 @@
+{{ define "hide show button" }}
+<input type='button' id='hideshow' value='hide/show' onclick='hide_show("#{{ jq .Key}}")'>
+{{ end }}
+
+{{ define "hide show script" }}
+<script>
+    function hide_show(id) {
+        console.log(this);
+        console.log(id);
+
+        $(id).toggle('show');
+    }
+</script>
+{{ end }}

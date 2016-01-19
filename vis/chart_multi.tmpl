@@ -1,0 +1,26 @@
+{{ define "chart_multi" }}
+{{ template "hide show button" . }} {{ .JSTag }}
+<div id="{{ .JSTag }}"></div>
+<script type="text/javascript">
+    c3.generate({
+        bindto: "#{{ jq .Key }}",
+        data: {
+            x: 'x',
+            xFormat: '%Y%m%d %H:%M:%S',
+            columns: [
+                {{ .C3Time }},
+                {{ .C3Data }}
+            ]
+        },
+        axis: {
+            x: {
+                type: 'timeseries',
+                tick: {
+                    format: '%Y-%m-%d %H:%M:%S',
+                    count: 12
+                }
+            }
+        }
+    });
+</script>
+{{ end }}

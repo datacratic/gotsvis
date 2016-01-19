@@ -1,0 +1,25 @@
+{{ define "chart" }}
+{{ template "hide show button" . }} {{ TimeSeriesTagJS . }}
+<div id="{{ TimeSeriesTagJS . }}"></div>
+<script type="text/javascript">
+    c3.generate({
+        bindto: "#{{ jq .Key }}",
+        data: {
+            x: 'x',
+            xFormat: '%Y%m%d %H:%M:%S',
+            columns: [
+                {{ Chart . }}
+            ]
+        },
+        axis: {
+            x: {
+                type: 'timeseries',
+                tick: {
+                    format: '%Y-%m-%d %H:%M:%S',
+                    count: 12
+                }
+            }
+        }
+    });
+</script>
+{{ end }}
