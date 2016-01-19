@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"gotsvis2/ts"
+	"github.com/datacratic/gotsvis/ts"
 )
 
 type Graphite struct {
@@ -37,7 +37,6 @@ func (graph *Graphite) Do(req Request) *Response {
 	query := req.GetQuery()
 	query.Add("format", "raw")
 	respHTTP, err := graph.Client.Get(graph.URL + "/render?" + query.Encode())
-	//fmt.Println(string(resp.Body))
 
 	resp := &Response{
 		Request: &req,
@@ -95,7 +94,6 @@ func (resp *Response) Single() (*ts.TimeSeries, error) {
 
 	buf := bytes.NewBuffer(resp.Body)
 	for line, err := buf.ReadBytes('\n'); err == nil; line, err = buf.ReadBytes('\n') {
-		fmt.Println("line", string(line), err)
 		if len(resp.data) > 0 {
 			resp.Error = errors.New("response length is larger than a single time series")
 			return nil, resp.Error
@@ -108,9 +106,6 @@ func (resp *Response) Single() (*ts.TimeSeries, error) {
 			resp.data = append(resp.data, *ts)
 		}
 	}
-	buf = bytes.NewBuffer(resp.Body)
-	line, err := buf.ReadBytes('\n')
-	fmt.Println("line2", string(line), err)
 
 	if len(resp.data) == 0 {
 		resp.Error = errors.New("no data in response")
@@ -186,7 +181,6 @@ func (resp *Response) readLine(line []byte) (*ts.TimeSeries, error) {
 		header = header[:len(header)-1]
 		headers := bytes.Split(header, []byte(","))
 		if len(headers) < 4 {
-			fmt.Println("headers", headers)
 			resp.Error = errors.New("graphite data header size <= 4")
 			return nil, resp.Error
 		}
@@ -220,14 +214,12 @@ func (resp *Response) readLine(line []byte) (*ts.TimeSeries, error) {
 		point, err = buf.ReadBytes(',')
 		point = point[:len(point)-1]
 
-		fmt.Println("point", string(point))
 		if bytes.Equal(point, []byte("None")) {
 			data[i] = math.NaN()
 			continue
 		}
 		data[i], errP = strconv.ParseFloat(string(point), 64)
 		if errP != nil {
-			fmt.Println("here", string(point), errP)
 			resp.Error = errP
 			return nil, errP
 		}
@@ -236,8 +228,5 @@ func (resp *Response) readLine(line []byte) (*ts.TimeSeries, error) {
 		resp.Error = err
 		return nil, resp.Error
 	}
-	fmt.Println(string(resp.Body))
-	fmt.Println(key, start, step, data)
-	fmt.Println(len(data))
 	return ts.NewTimeSeriesOfData(key, start, step, data)
 }

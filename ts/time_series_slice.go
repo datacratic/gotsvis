@@ -4,13 +4,10 @@ package ts
 
 import (
 	"bytes"
-	"errors"
 	"html/template"
 	"math"
 	"strconv"
 	"time"
-
-	"github.com/datacratic/goklog/klog"
 )
 
 type TimeSeriesSlice []TimeSeries
@@ -102,35 +99,32 @@ func (tss TimeSeriesSlice) Step() (time.Duration, bool) {
 	return tss.checkEqualStep()
 }
 
-func (tss TimeSeriesSlice) TransformSlice(transform TranformSlice) (*TimeSeries, error) {
+func (tss TimeSeriesSlice) TransformSlice(transform TranformSlice) *TimeSeries {
 
 	step, ok := tss.checkEqualStep()
 	if !ok {
-		return nil, errors.New("step sizes don't match")
+		return nil
 	}
 	start, end := tss.getStartEnd()
 
-	buf := bytes.NewBufferString("Sum(")
+	key := "Sum("
 	for i, _ := range tss {
-		if _, err := buf.WriteString(tss[i].key); err != nil {
-			klog.KPrintf("TimeSeriesSlice.error", "%s", err)
-			return nil, err
-		}
+		key += tss[i].key
 		if i < len(tss)-1 {
-			if _, err := buf.WriteString(","); err != nil {
-				klog.KPrintf("TimeSeriesSlice.error", "%s", err)
-				return nil, err
-			}
+			key += ","
 		}
 	}
-	if _, err := buf.WriteString(")"); err != nil {
-		klog.KPrintf("TimeSeriesSlice.error", "%s", err)
-		return nil, err
-	}
+	key += ")"
 
-	result, err := NewTimeSeriesOfTimeRange(buf.String(), start, end, step, math.NaN())
-	if err != nil {
-		return nil, err
+	size := end.Sub(start) / step
+	result := &TimeSeries{
+		key:   transform.Name() + "(" + key + ")",
+		start: start,
+		step:  step,
+		data:  make([]float64, size),
+	}
+	for i, _ := range result.data {
+		result.data[i] = math.NaN()
 	}
 
 	// TODO: this can be optimized to use a different iteration type.
@@ -153,7 +147,7 @@ func (tss TimeSeriesSlice) TransformSlice(transform TranformSlice) (*TimeSeries,
 		}
 		cursor = cursor.Add(step)
 	}
-	return result, nil
+	return result
 }
 
 func (tss TimeSeriesSlice) TransformEach(transform Transform) (TimeSeriesSlice, error) {

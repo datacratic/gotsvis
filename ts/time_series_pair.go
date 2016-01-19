@@ -3,7 +3,6 @@
 package ts
 
 import (
-	"errors"
 	"fmt"
 	"math"
 )
@@ -13,10 +12,10 @@ type TimeSeriesPair struct {
 	Second *TimeSeries
 }
 
-func (tsp *TimeSeriesPair) TransformPair(t TransformPair) (*TimeSeries, error) {
+func (tsp *TimeSeriesPair) TransformPair(t TransformPair) *TimeSeries {
 
 	if !tsp.First.IsEqualStep(tsp.Second) {
-		return nil, errors.New("step sizes don't match")
+		return nil
 	}
 	step := tsp.First.step
 
@@ -29,10 +28,15 @@ func (tsp *TimeSeriesPair) TransformPair(t TransformPair) (*TimeSeries, error) {
 		end = tsp.Second.End()
 	}
 
-	key := fmt.Sprintf("%s(%s,%s)", t.Name(), tsp.First.key, tsp.Second.key)
-	result, err := NewTimeSeriesOfTimeRange(key, start, end, step, math.NaN())
-	if err != nil {
-		return nil, err
+	size := end.Sub(start) / step
+	result := &TimeSeries{
+		key:   fmt.Sprintf("%s(%s,%s)", t.Name(), tsp.First.key, tsp.Second.key),
+		start: start,
+		step:  step,
+		data:  make([]float64, size),
+	}
+	for i, _ := range result.data {
+		result.data[i] = math.NaN()
 	}
 
 	cursor := start
@@ -45,7 +49,7 @@ func (tsp *TimeSeriesPair) TransformPair(t TransformPair) (*TimeSeries, error) {
 		}
 		result.data[i] = t.TransformPair(f, s)
 	}
-	return result, nil
+	return result
 }
 
 type TransformPair interface {

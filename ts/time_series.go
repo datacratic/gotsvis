@@ -82,6 +82,9 @@ type TimeSeries struct {
 func (ts *TimeSeries) Key() string {
 	return ts.key
 }
+func (ts *TimeSeries) SetKey(key string) {
+	ts.key = key
+}
 func (ts *TimeSeries) Start() time.Time {
 	return ts.start
 }
@@ -156,7 +159,7 @@ func (ts *TimeSeries) Transform(transform Transform) *TimeSeries {
 	return tts
 }
 
-func (ts *TimeSeries) TimeTransform(transform TimeTransform) (*TimeSeries, error) {
+func (ts *TimeSeries) TimeTransform(transform TimeTransform) *TimeSeries {
 	cursor := ts.start
 
 	start := transform.Start()
@@ -173,10 +176,15 @@ func (ts *TimeSeries) TimeTransform(transform TimeTransform) (*TimeSeries, error
 		newStep = ts.step
 	}
 
-	key := transform.Name() + "(" + ts.key + ")"
-	rts, err := NewTimeSeriesOfTimeRange(key, start, end, newStep, math.NaN())
-	if err != nil {
-		return nil, err
+	size := end.Sub(ts.start) / ts.step
+	rts := &TimeSeries{
+		key:   transform.Name() + "(" + ts.key + ")",
+		start: start,
+		step:  newStep,
+		data:  make([]float64, size),
+	}
+	for i, _ := range rts.data {
+		rts.data[i] = math.NaN()
 	}
 
 	for _, v := range ts.data {
@@ -185,7 +193,7 @@ func (ts *TimeSeries) TimeTransform(transform TimeTransform) (*TimeSeries, error
 		cursor = cursor.Add(ts.step)
 	}
 
-	return rts, nil
+	return rts
 }
 
 func (ts TimeSeries) String() string {
