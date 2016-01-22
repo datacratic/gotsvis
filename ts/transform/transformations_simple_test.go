@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"gotsvis2/ts"
+	"github.com/datacratic/gotsvis/ts"
 )
 
 type TestSeries struct {

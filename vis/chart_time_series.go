@@ -6,10 +6,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"gotsvis2/ts"
 	"html/template"
 	"math"
 	"strconv"
+
+	"github.com/datacratic/gotsvis/ts"
 )
 
 func timeString(ts *ts.TimeSeries) (string, error) {
@@ -74,6 +75,8 @@ func ChartSingle(ts *ts.TimeSeries) (template.JS, error) {
 	if err != nil {
 		return "", err
 	}
+	fmt.Println(ts.Key())
+	fmt.Println(ts.Start(), ts.End())
 	s := bytes.NewBufferString(t)
 	if err := s.WriteByte(','); err != nil {
 		return "", err
@@ -90,12 +93,17 @@ func ChartSingle(ts *ts.TimeSeries) (template.JS, error) {
 }
 
 func ChartSlice(tss ts.TimeSeriesSlice) (template.JS, error) {
+	if tss == nil {
+		return template.JS("[]"), nil
+	}
 	start := tss.Start()
 	end := tss.End()
 	step, ok := tss.Step()
 	if !ok {
 		return "", errors.New("time series step is not equal")
 	}
+	fmt.Println(tss.Key())
+	fmt.Println(tss.Start(), tss.End())
 	dummyTS, err := ts.NewTimeSeriesOfTimeRange("dummyTS", start, end, step, 0)
 	if err != nil {
 		return "", err
@@ -127,6 +135,8 @@ func Chart(series interface{}) (template.JS, error) {
 	switch t := series.(type) {
 	case *ts.TimeSeries:
 		return ChartSingle(t)
+	case ts.TimeSeries:
+		return ChartSingle(&t)
 	case ts.TimeSeriesSlice:
 		return ChartSlice(t)
 	default:
@@ -137,6 +147,8 @@ func Chart(series interface{}) (template.JS, error) {
 func TimeSeriesTagJS(series interface{}) (template.JS, error) {
 	switch t := series.(type) {
 	case *ts.TimeSeries:
+		return template.JS(t.Key()), nil
+	case ts.TimeSeries:
 		return template.JS(t.Key()), nil
 	case ts.TimeSeriesSlice:
 		return template.JS(t.Key()), nil

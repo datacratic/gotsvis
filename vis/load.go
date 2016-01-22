@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var TemplateDir = "/home/michael/mygo/src/gotsvis/vis/"
+var TemplateDir = "/home/michael/mygo/src/github.com/datacratic/gotsvis/vis/"
 
 func EscapeJQ(s string) string {
 	s = strings.Replace(s, ".", "\\.", -1)

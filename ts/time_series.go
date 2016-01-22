@@ -5,7 +5,6 @@ package ts
 import (
 	"bytes"
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 )
@@ -159,43 +158,6 @@ func (ts *TimeSeries) Transform(transform Transform) *TimeSeries {
 	return tts
 }
 
-func (ts *TimeSeries) TimeTransform(transform TimeTransform) *TimeSeries {
-	cursor := ts.start
-
-	start := transform.Start()
-	end := transform.End()
-	newStep := transform.Step()
-
-	if start.IsZero() {
-		start = ts.start
-	}
-	if end.IsZero() {
-		end = ts.End()
-	}
-	if int(newStep) == 0 {
-		newStep = ts.step
-	}
-
-	size := end.Sub(ts.start) / ts.step
-	rts := &TimeSeries{
-		key:   transform.Name() + "(" + ts.key + ")",
-		start: start,
-		step:  newStep,
-		data:  make([]float64, size),
-	}
-	for i, _ := range rts.data {
-		rts.data[i] = math.NaN()
-	}
-
-	for _, v := range ts.data {
-		t, v := transform.TimeTransform(cursor, v)
-		rts.SetAt(t, v)
-		cursor = cursor.Add(ts.step)
-	}
-
-	return rts
-}
-
 func (ts TimeSeries) String() string {
 	s := bytes.NewBufferString("")
 	s.WriteString(ts.key)
@@ -227,12 +189,4 @@ func (ts TimeSeries) String() string {
 type Transform interface {
 	Name() string
 	Transform(float64) float64
-}
-
-type TimeTransform interface {
-	Name() string
-	Start() time.Time
-	End() time.Time
-	Step() time.Duration
-	TimeTransform(time.Time, float64) (time.Time, float64)
 }

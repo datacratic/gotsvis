@@ -58,6 +58,8 @@ func (tss TimeSeriesSlice) checkEqualStep() (time.Duration, bool) {
 	var step time.Duration
 	if len(tss) > 0 {
 		step = tss[0].step
+	} else {
+		return 0, false
 	}
 	for i := 1; i < len(tss); i++ {
 		if step != tss[i].step {
@@ -107,14 +109,13 @@ func (tss TimeSeriesSlice) TransformSlice(transform TranformSlice) *TimeSeries {
 	}
 	start, end := tss.getStartEnd()
 
-	key := "Sum("
+	key := ""
 	for i, _ := range tss {
 		key += tss[i].key
 		if i < len(tss)-1 {
 			key += ","
 		}
 	}
-	key += ")"
 
 	size := end.Sub(start) / step
 	result := &TimeSeries{
@@ -139,7 +140,9 @@ func (tss TimeSeriesSlice) TransformSlice(transform TranformSlice) *TimeSeries {
 		for j, _ := range tss {
 			// slow part
 			if v, ok := tss[j].GetAt(cursor); ok {
-				slice = append(slice, v)
+				if !math.IsNaN(v) {
+					slice = append(slice, v)
+				}
 			}
 		}
 		if len(slice) > 0 {
