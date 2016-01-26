@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"math"
 	"strconv"
+	"time"
 
 	"github.com/datacratic/gotsvis/ts"
 )
@@ -18,7 +18,6 @@ func timeString(ts *ts.TimeSeries) (string, error) {
 
 	cursor := ts.Start()
 	step := ts.Step()
-	// TODO: change to use start, end, step as iterator instead of a data slice
 	for _, _ = range ts.Data() {
 		if err := s.WriteByte('\''); err != nil {
 			return "", err
@@ -40,7 +39,7 @@ func timeString(ts *ts.TimeSeries) (string, error) {
 	return s.String(), nil
 }
 
-func valueString(ts *ts.TimeSeries) (string, error) {
+func valueString(ts *ts.TimeSeries, start, end time.Time) (string, error) {
 	s := bytes.NewBufferString("[ '")
 	if _, err := s.WriteString(ts.Key()); err != nil {
 		return "", err
@@ -48,17 +47,16 @@ func valueString(ts *ts.TimeSeries) (string, error) {
 	if _, err := s.WriteString("', "); err != nil {
 		return "", err
 	}
-
-	for _, v := range ts.Data() {
-		if math.IsInf(v, 0) {
-			if _, err := s.WriteString("NaN"); err != nil {
-				return "", err
-			}
-		} else if _, err := s.WriteString(strconv.FormatFloat(v, 'E', 2, 64)); err != nil {
+	for cursor, step := start, ts.Step(); cursor.Before(end); cursor = cursor.Add(step) {
+		v, _ := ts.GetAt(cursor)
+		if _, err := s.WriteString(strconv.FormatFloat(v, 'E', 2, 64)); err != nil {
 			return "", err
 		}
 		if err := s.WriteByte(','); err != nil {
 			return "", err
+		}
+		if step == 0 {
+			break
 		}
 	}
 	if s.Len() > 0 {
@@ -75,14 +73,12 @@ func ChartSingle(ts *ts.TimeSeries) (template.JS, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(ts.Key())
-	fmt.Println(ts.Start(), ts.End())
 	s := bytes.NewBufferString(t)
 	if err := s.WriteByte(','); err != nil {
 		return "", err
 	}
 
-	v, err := valueString(ts)
+	v, err := valueString(ts, ts.Start(), ts.End())
 	if err != nil {
 		return "", err
 	}
@@ -94,7 +90,7 @@ func ChartSingle(ts *ts.TimeSeries) (template.JS, error) {
 
 func ChartSlice(tss ts.TimeSeriesSlice) (template.JS, error) {
 	if tss == nil {
-		return template.JS("[]"), nil
+		return template.JS(""), nil
 	}
 	start := tss.Start()
 	end := tss.End()
@@ -102,8 +98,7 @@ func ChartSlice(tss ts.TimeSeriesSlice) (template.JS, error) {
 	if !ok {
 		return "", errors.New("time series step is not equal")
 	}
-	fmt.Println(tss.Key())
-	fmt.Println(tss.Start(), tss.End())
+
 	dummyTS, err := ts.NewTimeSeriesOfTimeRange("dummyTS", start, end, step, 0)
 	if err != nil {
 		return "", err
@@ -119,8 +114,11 @@ func ChartSlice(tss ts.TimeSeriesSlice) (template.JS, error) {
 		if err := s.WriteByte(','); err != nil {
 			return "", err
 		}
+		if err := s.WriteByte('\n'); err != nil {
+			return "", err
+		}
 
-		v, err := valueString(&tss[i])
+		v, err := valueString(&tss[i], start, end)
 		if err != nil {
 			return "", err
 		}

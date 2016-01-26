@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var NaN = math.NaN()
+
 func checkTimeSeries(t *testing.T, got, exp *TimeSeries) {
 	if got == nil {
 		t.Errorf("FAIL(TimeSeries): can't be nil")
@@ -167,6 +169,60 @@ func TestTimeSeriesConstructors(t *testing.T) {
 				start: start,
 				step:  step,
 				data:  []float64{},
+			},
+		},
+	}
+
+	for _, pair := range tss {
+		fmt.Printf("%s\n%s\n\n", pair.Got, pair.Exp)
+		checkTimeSeries(t, pair.Got, pair.Exp)
+	}
+}
+
+func TestTimeSeriesExtend(t *testing.T) {
+	start := time.Date(2016, time.Month(1), 25, 10, 0, 0, 0, time.UTC)
+	step := time.Minute
+
+	ts0, err := NewTimeSeriesOfData("test0", start, step, []float64{1, 2, 3})
+	checkErr(t, err)
+	ts1 := ts0.Copy()
+	ts1.ExtendBy(3 * time.Minute)
+
+	ts2 := ts0.Copy()
+	ts2.ExtendTo(time.Date(2016, time.Month(1), 25, 10, 5, 0, 0, time.UTC))
+
+	ts3 := ts0.Copy()
+	ts3.ExtendWith([]float64{4, 5, 6})
+
+	tss := []struct {
+		Got *TimeSeries
+		Exp *TimeSeries
+	}{
+		{
+			Got: ts1,
+			Exp: &TimeSeries{
+				key:   "test0",
+				start: start,
+				step:  step,
+				data:  []float64{1, 2, 3, NaN, NaN, NaN},
+			},
+		},
+		{
+			Got: ts2,
+			Exp: &TimeSeries{
+				key:   "test0",
+				start: start,
+				step:  step,
+				data:  []float64{1, 2, 3, NaN, NaN, NaN},
+			},
+		},
+		{
+			Got: ts3,
+			Exp: &TimeSeries{
+				key:   "test0",
+				start: start,
+				step:  step,
+				data:  []float64{1, 2, 3, 4, 5, 6},
 			},
 		},
 	}

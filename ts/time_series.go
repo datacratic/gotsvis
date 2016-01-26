@@ -5,6 +5,7 @@ package ts
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
@@ -13,8 +14,10 @@ import (
 // and actually all other NewTimeSeries... call this one.
 func NewTimeSeries(key string, start, end time.Time, step time.Duration, values ...float64) (*TimeSeries, error) {
 	singleValue := false
+	filler := math.NaN()
 	if len(values) == 1 {
 		singleValue = true
+		filler = values[0]
 	}
 	if start.IsZero() {
 		start = time.Now()
@@ -29,9 +32,10 @@ func NewTimeSeries(key string, start, end time.Time, step time.Duration, values 
 	}
 
 	ts := &TimeSeries{
-		key:   key,
-		start: start,
-		step:  step,
+		key:    key,
+		start:  start,
+		step:   step,
+		filler: filler,
 	}
 
 	if ts.start.After(end) {
@@ -48,7 +52,7 @@ func NewTimeSeries(key string, start, end time.Time, step time.Duration, values 
 
 	for i, _ := range ts.data {
 		if singleValue {
-			ts.data[i] = values[0]
+			ts.data[i] = filler
 		} else if i < len(values) {
 			ts.data[i] = values[i]
 		} else {
@@ -72,10 +76,11 @@ func NewTimeSeriesOfData(key string, start time.Time, step time.Duration, data [
 }
 
 type TimeSeries struct {
-	key   string
-	start time.Time
-	step  time.Duration
-	data  []float64
+	key    string
+	start  time.Time
+	step   time.Duration
+	data   []float64
+	filler float64
 }
 
 func (ts *TimeSeries) Key() string {
@@ -102,12 +107,35 @@ func (ts *TimeSeries) Data() []float64 {
 }
 func (ts *TimeSeries) Copy() *TimeSeries {
 	nts := &TimeSeries{
-		key:   ts.key,
-		start: ts.start,
-		step:  ts.step,
-		data:  ts.Data(),
+		key:    ts.key,
+		start:  ts.start,
+		step:   ts.step,
+		data:   ts.Data(),
+		filler: ts.filler,
 	}
 	return nts
+}
+
+func (ts *TimeSeries) ExtendTo(t time.Time) {
+	end := ts.End()
+	if t.Before(end) {
+		return
+	}
+	t = t.Add(ts.step)
+	points := t.Sub(end) / ts.step
+
+	for i := 0; i < int(points); i++ {
+		ts.data = append(ts.data, ts.filler)
+	}
+}
+func (ts *TimeSeries) ExtendBy(d time.Duration) {
+	points := d / ts.step
+	for i := 0; i < int(points); i++ {
+		ts.data = append(ts.data, ts.filler)
+	}
+}
+func (ts *TimeSeries) ExtendWith(data []float64) {
+	ts.data = append(ts.data, data...)
 }
 
 func (ts *TimeSeries) index(t time.Time) int {
@@ -128,7 +156,7 @@ func (ts *TimeSeries) index(t time.Time) int {
 func (ts *TimeSeries) GetAt(t time.Time) (float64, bool) {
 	index := ts.index(t)
 	if index == -1 {
-		return 0, false
+		return math.NaN(), false
 	}
 	return ts.data[index], true
 }

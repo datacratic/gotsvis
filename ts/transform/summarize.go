@@ -39,8 +39,8 @@ func Summarize(ts *TimeSeries, step time.Duration) *TimeSeries {
 
 			v, ok := ts.GetAt(oldC)
 			if !ok || math.IsNaN(v) {
-				continue
 				sum = 0
+				continue
 			}
 			sum = v
 		}
