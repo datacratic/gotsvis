@@ -4,8 +4,9 @@ package transform
 
 import (
 	"fmt"
-	"gotsvis/ts"
 	"math"
+
+	"github.com/datacratic/gotsvis/ts"
 )
 
 type CumulativeSum struct {
@@ -177,18 +178,17 @@ func (ts *Transforms) Transform(val float64) float64 {
 }
 
 type IfTrueSet struct {
-	Condition ts.Transform
+	Predicate func(float64) bool
 	Value     float64
 }
 
 func (ies *IfTrueSet) Name() string {
-	return fmt.Sprintf("IfEqual(%s)Set(%f)Over", ies.Condition.Name(), ies.Value)
+	return fmt.Sprintf("IfTrueSet(%f)", ies.Value)
 }
 
 func (ies *IfTrueSet) Transform(val float64) float64 {
-	cond := ies.Condition.Transform(val)
-	if math.IsNaN(cond) || cond == 0 {
-		return val
+	if ies.Predicate(val) {
+		return ies.Value
 	}
-	return ies.Value
+	return val
 }
