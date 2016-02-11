@@ -32,14 +32,14 @@ func (graph *Graphite) Init() {
 	}
 }
 
-func (graph *Graphite) Do(req Request) *Response {
+func (graph *Graphite) Do(req GraphiteRequest) *Response {
 
 	query := req.GetQuery()
 	query.Add("format", "raw")
 	respHTTP, err := graph.Client.Get(graph.URL + "/render?" + query.Encode())
 
 	resp := &Response{
-		Request: &req,
+		Request: req,
 		Error:   err,
 		Code:    respHTTP.StatusCode,
 		data:    make(ts.TimeSeriesSlice, 0),
@@ -53,6 +53,10 @@ func (graph *Graphite) Do(req Request) *Response {
 	}
 
 	return resp
+}
+
+type GraphiteRequest interface {
+	GetQuery() url.Values
 }
 
 type Request struct {
@@ -75,9 +79,37 @@ func (req *Request) GetQuery() url.Values {
 	return query
 }
 
+type Requests []Request
+
+func (reqs Requests) GetQuery() url.Values {
+	query := make(url.Values)
+	var from, until time.Time
+
+	for _, r := range reqs {
+		query.Add("target", r.Key)
+		if from.IsZero() {
+			from = r.From
+		} else if from.After(r.From) {
+			from = r.From
+		}
+		if until.IsZero() {
+			until = r.Until
+		} else if until.Before(r.Until) {
+			until = r.Until
+		}
+	}
+	if !from.IsZero() {
+		query.Add("from", strconv.FormatInt(from.Unix(), 10))
+	}
+	if !until.IsZero() {
+		query.Add("until", strconv.FormatInt(until.Unix(), 10))
+	}
+	return query
+}
+
 // Response struct from a graphite request.
 type Response struct {
-	Request *Request
+	Request GraphiteRequest
 	Body    []byte
 	Code    int
 	Error   error
@@ -159,6 +191,25 @@ func (resp *Response) All() (ts.TimeSeriesSlice, error) {
 		return nil, resp.Error
 	}
 	return resp.data, nil
+}
+
+func (resp *Response) GetMatchingAll(key string) (ts.TimeSeriesSlice, error) {
+	tss, err := resp.All()
+	if err != nil {
+		return nil, err
+	}
+	return tss.GetMatching(key), nil
+}
+
+func (resp *Response) GetMatchingSingle(key string) (*ts.TimeSeries, error) {
+	matching, err := resp.GetMatchingAll(key)
+	if err != nil {
+		return nil, err
+	}
+	if len(matching) == 0 {
+		return nil, fmt.Errorf("key matching '%s' not found in response", key)
+	}
+	return &matching[0], nil
 }
 
 func (resp *Response) checkError() error {

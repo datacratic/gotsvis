@@ -157,33 +157,32 @@ func (diff *DiffPrevious) Transform(val float64) float64 {
 	return 0.0
 }
 
-type Transforms struct {
-	Transforms []ts.Transform
-}
+type Transforms []ts.Transform
 
-func (ts *Transforms) Name() string {
+func (ts Transforms) Name() string {
 	s := "Transforms["
-	for _, t := range ts.Transforms {
+	for _, t := range ts {
 		s += "(" + t.Name() + ")"
 	}
 	s += "]"
 	return s
 }
 
-func (ts *Transforms) Transform(val float64) float64 {
-	for _, t := range ts.Transforms {
+func (ts Transforms) Transform(val float64) float64 {
+	for _, t := range ts {
 		val = t.Transform(val)
 	}
 	return val
 }
 
 type IfTrueSet struct {
-	Predicate func(float64) bool
-	Value     float64
+	Predicate     func(float64) bool
+	Value         float64
+	PredicateName string
 }
 
 func (ies *IfTrueSet) Name() string {
-	return fmt.Sprintf("IfTrueSet(%f)", ies.Value)
+	return fmt.Sprintf("IfTrue(%s)Set(%f)", ies.PredicateName, ies.Value)
 }
 
 func (ies *IfTrueSet) Transform(val float64) float64 {
@@ -191,4 +190,39 @@ func (ies *IfTrueSet) Transform(val float64) float64 {
 		return ies.Value
 	}
 	return val
+}
+
+type IfFalseSet struct {
+	Predicate     func(float64) bool
+	Value         float64
+	PredicateName string
+}
+
+func (ies *IfFalseSet) Name() string {
+	return fmt.Sprintf("IfFalse(%s)Set(%f)", ies.PredicateName, ies.Value)
+}
+
+func (ies *IfFalseSet) Transform(val float64) float64 {
+	if !ies.Predicate(val) {
+		return ies.Value
+	}
+	return val
+}
+
+type IfElse struct {
+	Predicate     func(float64) bool
+	True          float64
+	False         float64
+	PredicateName string
+}
+
+func (ies *IfElse) Name() string {
+	return fmt.Sprintf("If(%s)Set(%f)Else(%f)", ies.PredicateName, ies.True, ies.False)
+}
+
+func (ies *IfElse) Transform(val float64) float64 {
+	if ies.Predicate(val) {
+		return ies.True
+	}
+	return ies.False
 }

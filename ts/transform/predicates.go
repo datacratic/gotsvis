@@ -1,11 +1,15 @@
 package transform
 
+import "math"
+
 var GT = Greater
 var EQ = Equal
 var NE = NotEqual
 var GE = GreaterOrEqual
 var LT = Lesser
 var LE = LesserOrEqual
+var EQNAN = math.IsNaN
+var NENAN = NotEqualNaN
 
 var Greater = func(comp float64) func(float64) bool {
 	return func(val float64) bool {
@@ -19,9 +23,17 @@ var Equal = func(comp float64) func(float64) bool {
 	}
 }
 
-var NotEqual = func(comp float64) func(float64) bool {
+var EqualNaN = func(val float64) bool {
+	return math.IsNaN(val)
+}
+
+var NotEqual = func(val float64) bool {
+	return !math.IsNaN(val)
+}
+
+var NotEqualNaN = func(comp float64) func(float64) bool {
 	return func(val float64) bool {
-		return val != comp
+		return !math.IsNaN(val)
 	}
 }
 

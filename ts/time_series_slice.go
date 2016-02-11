@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -35,6 +36,16 @@ func (tss TimeSeriesSlice) GetKey(key string) *TimeSeries {
 		}
 	}
 	return nil
+}
+
+func (tss TimeSeriesSlice) GetMatching(key string) TimeSeriesSlice {
+	res := TimeSeriesSlice{}
+	for _, ts := range tss {
+		if strings.Contains(ts.key, key) {
+			res = append(res, ts)
+		}
+	}
+	return res
 }
 
 func (tss TimeSeriesSlice) getStartEnd() (start, end time.Time) {
