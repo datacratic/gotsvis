@@ -4,11 +4,8 @@ package vis
 
 import (
 	"html/template"
-	"path/filepath"
 	"strings"
 )
-
-var TemplateDir = "/home/michael/mygo/src/github.com/datacratic/gotsvis/vis/"
 
 func EscapeJQ(s string) string {
 	s = strings.Replace(s, ".", "\\.", -1)
@@ -21,8 +18,7 @@ func EscapeJQ(s string) string {
 	return s
 }
 
-func LoadTemplates() *template.Template {
-	pattern := filepath.Join(TemplateDir, "*.tmpl")
+func LoadTemplates() (*template.Template, error) {
 	funcMap := make(template.FuncMap)
 	funcMap["jq"] = EscapeJQ
 	funcMap["Chart"] = Chart
@@ -30,6 +26,11 @@ func LoadTemplates() *template.Template {
 	funcMap["ChartTSS"] = ChartSlice
 	funcMap["TimeSeriesTagJS"] = TimeSeriesTagJS
 
-	templates := template.Must(template.New("").Funcs(funcMap).ParseGlob(pattern))
-	return templates
+	templates := template.New("").Funcs(funcMap)
+	for _, tmpl := range GetTMPL() {
+		if _, err := templates.Parse(tmpl); err != nil {
+			return nil, err
+		}
+	}
+	return templates, nil
 }
