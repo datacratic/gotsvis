@@ -37,10 +37,6 @@ func (graph *Graphite) Do(req GraphiteRequest) *Response {
 	query := req.GetQuery()
 	query.Add("format", "raw")
 	respHTTP, err := graph.Client.Get(graph.URL + "/render?" + query.Encode())
-	fmt.Println(graph.URL, "/render?", query.Encode())
-	fmt.Println("resp", respHTTP)
-	fmt.Println("err", err)
-	fmt.Println("timeout", graph.Client.Timeout)
 
 	resp := &Response{
 		Request: req,
