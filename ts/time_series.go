@@ -13,6 +13,11 @@ import (
 // NewTimeSeries, not the clearest of functions, but made to be variable.
 // and actually all other NewTimeSeries... call this one.
 func NewTimeSeries(key string, start, end time.Time, step time.Duration, values ...float64) (*TimeSeries, error) {
+
+	if int(step) == 0 {
+		return nil, fmt.Errorf("step can't be 0")
+	}
+
 	singleValue := false
 	filler := math.NaN()
 	if len(values) == 1 {
@@ -47,7 +52,7 @@ func NewTimeSeries(key string, start, end time.Time, step time.Duration, values 
 		}
 	}
 
-	size := end.Sub(ts.start) / ts.step
+	size := int(end.Sub(ts.start) / ts.step)
 	ts.data = make([]float64, size)
 
 	for i, _ := range ts.data {
@@ -217,4 +222,22 @@ func (ts TimeSeries) String() string {
 type Transform interface {
 	Name() string
 	Transform(float64) float64
+}
+
+type Iterator struct {
+	cursor time.Time
+	series *TimeSeries
+}
+
+func (it *Iterator) Next() (val float64, ok bool) {
+	val, ok = it.series.GetAt(it.cursor)
+	it.cursor = it.cursor.Add(it.series.step)
+	return
+}
+
+func (ts *TimeSeries) Iterator() *Iterator {
+	return &Iterator{
+		cursor: ts.start,
+		series: ts,
+	}
 }

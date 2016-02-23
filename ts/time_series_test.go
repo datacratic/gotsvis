@@ -232,3 +232,59 @@ func TestTimeSeriesExtend(t *testing.T) {
 		checkTimeSeries(t, pair.Got, pair.Exp)
 	}
 }
+
+func TestTimeSeriesIterator(t *testing.T) {
+	start := time.Date(2016, time.Month(1), 25, 10, 0, 0, 0, time.UTC)
+	step := time.Minute
+
+	ts0, err := NewTimeSeriesOfData("test0", start, step, []float64{})
+	checkErr(t, err)
+
+	ts1, err := NewTimeSeriesOfData("test1", start, step, []float64{1})
+	checkErr(t, err)
+
+	ts2, err := NewTimeSeriesOfData("test2", start, step, []float64{1, 2})
+	checkErr(t, err)
+
+	ts3, err := NewTimeSeriesOfData("test3", start, step, []float64{1, NaN, 3})
+	checkErr(t, err)
+
+	tss := []struct {
+		Got *TimeSeries
+		Exp []float64
+	}{
+		{
+			Got: ts0,
+			Exp: []float64{},
+		},
+		{
+			Got: ts1,
+			Exp: []float64{1},
+		},
+		{
+			Got: ts2,
+			Exp: []float64{1, 2},
+		},
+		{
+			Got: ts3,
+			Exp: []float64{1, NaN, 3},
+		},
+	}
+
+	for _, pair := range tss {
+		fmt.Printf("%s\n%v\n\n", pair.Got, pair.Exp)
+		got := []float64{}
+		it := pair.Got.Iterator()
+		for val, ok := it.Next(); ok; val, ok = it.Next() {
+			got = append(got, val)
+		}
+		if len(got) != len(pair.Exp) {
+			t.Errorf("FAIL: len(got):\n\t%d,\nlen(exp):\n\t%d", len(got), len(pair.Exp))
+		}
+		for i, e := range pair.Exp {
+			if got[i] != e && !(math.IsNaN(e) && math.IsNaN(got[i])) {
+				t.Errorf("FAIL: got:\n\t%f,\nlen(exp):\n\t%f", got[i], e)
+			}
+		}
+	}
+}

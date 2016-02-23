@@ -47,7 +47,7 @@ func TestGraphiteHTTP(t *testing.T) {
 	}
 	graphite.Init()
 
-	resp := graphite.Do(Request{Key: "some.random.key"})
+	resp := graphite.Do(&Request{Key: "some.random.key"})
 
 	_, err := resp.Single()
 	if err != nil {
@@ -55,7 +55,7 @@ func TestGraphiteHTTP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp = graphite.Do(Request{Key: "some.*.key"})
+	resp = graphite.Do(&Request{Key: "some.*.key"})
 
 	_, err = resp.First()
 	if err != nil {
