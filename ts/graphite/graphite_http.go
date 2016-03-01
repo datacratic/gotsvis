@@ -9,12 +9,17 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/datacratic/gotsvis/ts"
+)
+
+const (
+	TimeoutError = "timeout-error"
 )
 
 type Graphite struct {
@@ -41,9 +46,21 @@ func (graph *Graphite) Do(req GraphiteRequest) *Response {
 	resp := &Response{
 		Request: req,
 		Error:   err,
-		Code:    respHTTP.StatusCode,
 		data:    make(ts.TimeSeriesSlice, 0),
 	}
+	if respHTTP == nil || err != nil {
+		if err, ok := err.(*url.Error); ok {
+			if err, ok := err.Err.(net.Error); ok {
+				if err.Timeout() {
+					resp.Error = fmt.Errorf("%s: %s", TimeoutError, err)
+					return resp
+				}
+			}
+		}
+		fmt.Println("respHTTP nil or err:", respHTTP, err)
+	}
+
+	resp.Code = respHTTP.StatusCode
 	resp.Body, err = ioutil.ReadAll(respHTTP.Body)
 	respHTTP.Body.Close()
 	if resp.Error != nil {

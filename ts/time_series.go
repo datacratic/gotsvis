@@ -224,6 +224,13 @@ type Transform interface {
 	Transform(float64) float64
 }
 
+func (ts *TimeSeries) Iterator() *Iterator {
+	return &Iterator{
+		cursor: ts.start,
+		series: ts,
+	}
+}
+
 type Iterator struct {
 	cursor time.Time
 	series *TimeSeries
@@ -235,9 +242,8 @@ func (it *Iterator) Next() (val float64, ok bool) {
 	return
 }
 
-func (ts *TimeSeries) Iterator() *Iterator {
-	return &Iterator{
-		cursor: ts.start,
-		series: ts,
-	}
+func (it *Iterator) Last() (val float64, ok bool) {
+	it.cursor = it.series.End().Add(-it.series.step)
+	val, ok = it.series.GetAt(it.cursor)
+	return
 }

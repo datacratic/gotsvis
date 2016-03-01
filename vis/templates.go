@@ -1,9 +1,9 @@
 package vis
 
-//go:generate include_templates -package=vis -folder=. -output=templates.go -suffix=tmpl
+//go:generate include_suffix -package=vis -folder=. -output=templates.go -suffix=tmpl
 
-const (
-	buttonTMPL = `{{ define "hide show button" }}
+const(
+buttonTMPL = `{{ define "hide show button" }}
 <input type='button' id='hideshow' value='hide/show' onclick='hide_show("#{{ jq .Key}}")'>
 {{ end }}
 
@@ -18,7 +18,7 @@ const (
 </script>
 {{ end }}
 `
-	chartTMPL = `{{ define "chart" }}
+chartTMPL = `{{ define "chart" }}
 {{ template "hide show button" . }} {{ TimeSeriesTagJS . }}
 <div id="{{ TimeSeriesTagJS . }}"></div>
 <script type="text/javascript">
@@ -26,7 +26,7 @@ const (
         bindto: "#{{ jq .Key }}",
         data: {
             x: 'x',
-            xFormat: '%Y%m%d %H:%M:%S',
+            xFormat: '%%Y%%m%%d %%H:%%M:%%S',
             columns: [
                 {{ Chart . }}
             ]
@@ -35,7 +35,7 @@ const (
             x: {
                 type: 'timeseries',
                 tick: {
-                    format: '%Y-%m-%d %H:%M:%S',
+                    format: '%%Y-%%m-%%d %%H:%%M:%%S',
                     count: 12
                 }
             }
@@ -44,7 +44,7 @@ const (
 </script>
 {{ end }}
 `
-	linksTMPL = `
+linksTMPL = `
 {{ define "c3_cdn" }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.12/d3.min.js"></script>
@@ -61,5 +61,5 @@ const (
 )
 
 func GetTMPL() []string {
-	return []string{buttonTMPL, chartTMPL, linksTMPL}
+	return []string{ buttonTMPL, chartTMPL, linksTMPL }
 }

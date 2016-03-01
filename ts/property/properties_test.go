@@ -1,6 +1,6 @@
 // Copyright (c) 2014 Datacratic. All rights reserved.
 
-package transform
+package property
 
 import (
 	"fmt"
@@ -9,7 +9,14 @@ import (
 	"time"
 
 	"github.com/datacratic/gotsvis/ts"
+	. "github.com/datacratic/gotsvis/ts/predicate"
 )
+
+func checkErr(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf("FAIL(error): %s", err)
+	}
+}
 
 func TestProperties(t *testing.T) {
 
@@ -86,6 +93,12 @@ func TestProperties(t *testing.T) {
 		{
 			f:    None,
 			ts:   tsNaN,
+			pred: EQ(5),
+			exp:  false,
+		},
+		{
+			f:    None,
+			ts:   nil,
 			pred: EQ(5),
 			exp:  false,
 		},
