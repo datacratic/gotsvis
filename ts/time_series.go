@@ -247,3 +247,28 @@ func (it *Iterator) Last() (val float64, ok bool) {
 	val, ok = it.series.GetAt(it.cursor)
 	return
 }
+
+type IteratorTimeValue struct {
+	Iterator
+}
+
+func (ts *TimeSeries) IteratorTimeValue() *IteratorTimeValue {
+	return &IteratorTimeValue{Iterator{
+		cursor: ts.start,
+		series: ts,
+	}}
+}
+
+func (it *IteratorTimeValue) Next() (t time.Time, val float64, ok bool) {
+	t = it.cursor
+	val, ok = it.series.GetAt(it.cursor)
+	it.cursor = it.cursor.Add(it.series.step)
+	return
+}
+
+func (it *IteratorTimeValue) Last() (t time.Time, val float64, ok bool) {
+	it.cursor = it.series.End().Add(-it.series.step)
+	t = it.cursor
+	val, ok = it.series.GetAt(it.cursor)
+	return
+}

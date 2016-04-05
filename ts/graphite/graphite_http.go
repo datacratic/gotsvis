@@ -230,6 +230,9 @@ func (resp *Response) GetMatchingSingle(key string) (*ts.TimeSeries, error) {
 }
 
 func (resp *Response) checkError() error {
+	if resp == nil {
+		return errors.New("response was nil")
+	}
 	if resp.Code != 200 {
 		return fmt.Errorf("response returned status '%d' != 200", resp.Code)
 	}

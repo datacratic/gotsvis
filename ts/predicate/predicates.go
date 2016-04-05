@@ -23,18 +23,18 @@ var Equal = func(comp float64) func(float64) bool {
 	}
 }
 
+var NotEqual = func(comp float64) func(float64) bool {
+	return func(val float64) bool {
+		return val != comp
+	}
+}
+
 var EqualNaN = func(val float64) bool {
 	return math.IsNaN(val)
 }
 
-var NotEqual = func(val float64) bool {
+var NotEqualNaN = func(val float64) bool {
 	return !math.IsNaN(val)
-}
-
-var NotEqualNaN = func(comp float64) func(float64) bool {
-	return func(val float64) bool {
-		return !math.IsNaN(val)
-	}
 }
 
 var GreaterOrEqual = func(comp float64) func(float64) bool {
