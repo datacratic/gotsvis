@@ -272,8 +272,8 @@ func (resp *Response) readLine(line []byte) (*ts.TimeSeries, error) {
 			return nil, errors.New("step couldn't be determined")
 		}
 
-		start = time.Unix(startInt, 0)
-		end = time.Unix(endInt, 0)
+		start = time.Unix(startInt, 0).UTC()
+		end = time.Unix(endInt, 0).UTC()
 
 		points := end.Sub(start) / step
 		data = make([]float64, points)
