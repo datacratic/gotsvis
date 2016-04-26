@@ -26,7 +26,7 @@ chartTMPL = `{{ define "chart" }}
         bindto: "#{{ jq .Key }}",
         data: {
             x: 'x',
-            xFormat: '%%Y%%m%%d %%H:%%M:%%S',
+            xFormat: '%Y%m%d %H:%M:%S',
             columns: [
                 {{ Chart . }}
             ]
@@ -35,7 +35,7 @@ chartTMPL = `{{ define "chart" }}
             x: {
                 type: 'timeseries',
                 tick: {
-                    format: '%%Y-%%m-%%d %%H:%%M:%%S',
+                    format: '%Y-%m-%d %H:%M:%S',
                     count: 12
                 }
             }

@@ -140,10 +140,13 @@ func (resp *Response) Single() (*ts.TimeSeries, error) {
 	if err := resp.checkError(); err != nil {
 		return nil, err
 	}
+	resp.data = make(ts.TimeSeriesSlice, 0, 1)
 
 	buf := bytes.NewBuffer(resp.Body)
 	for line, err := buf.ReadBytes('\n'); err == nil; line, err = buf.ReadBytes('\n') {
 		if len(resp.data) > 0 {
+			fmt.Println(err)
+			fmt.Println(string(resp.Body))
 			resp.Error = errors.New("response length is larger than a single time series")
 			return nil, resp.Error
 		}

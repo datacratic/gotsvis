@@ -139,7 +139,7 @@ func (ts *TimeSeries) ExtendBy(d time.Duration) {
 		ts.data = append(ts.data, ts.filler)
 	}
 }
-func (ts *TimeSeries) ExtendWith(data []float64) {
+func (ts *TimeSeries) ExtendWith(data ...float64) {
 	ts.data = append(ts.data, data...)
 }
 
