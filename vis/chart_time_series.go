@@ -69,6 +69,9 @@ func valueString(ts *ts.TimeSeries, start, end time.Time) (string, error) {
 }
 
 func ChartSingle(ts *ts.TimeSeries) (template.JS, error) {
+	if ts == nil {
+		return template.JS(""), nil
+	}
 	t, err := timeString(ts)
 	if err != nil {
 		return "", err
@@ -145,10 +148,16 @@ func Chart(series interface{}) (template.JS, error) {
 func TimeSeriesTagJS(series interface{}) (template.JS, error) {
 	switch t := series.(type) {
 	case *ts.TimeSeries:
+		if t == nil {
+			return "", nil
+		}
 		return template.JS(t.Key()), nil
 	case ts.TimeSeries:
 		return template.JS(t.Key()), nil
 	case ts.TimeSeriesSlice:
+		if t == nil {
+			return "", nil
+		}
 		return template.JS(t.Key()), nil
 	default:
 		return "", fmt.Errorf("unknown type '%T'", series)
