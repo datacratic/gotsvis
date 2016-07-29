@@ -26,7 +26,7 @@ chartTMPL = `{{ define "chart" }}
         bindto: "#{{ jq .Key }}",
         data: {
             x: 'x',
-            xFormat: '%Y%m%d %H:%M:%S',
+            xFormat: '%%Y%%m%%d %%H:%%M:%%S',
             columns: [
                 {{ Chart . }}
             ]
@@ -35,7 +35,7 @@ chartTMPL = `{{ define "chart" }}
             x: {
                 type: 'timeseries',
                 tick: {
-                    format: '%Y-%m-%d %H:%M:%S',
+                    format: '%%Y-%%m-%%d %%H:%%M:%%S',
                     count: 12
                 }
             }
@@ -48,7 +48,7 @@ linksTMPL = `
 {{ define "c3_cdn" }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.12/d3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 {{ end }}
 
