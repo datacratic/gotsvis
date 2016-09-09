@@ -69,7 +69,7 @@ func NewTimeSeries(key string, start, end time.Time, step time.Duration, values 
 }
 
 func NewTimeSeriesOfTimeRange(key string, start, end time.Time, step time.Duration, filler float64) (*TimeSeries, error) {
-	return NewTimeSeries(key, start, end, step, filler)
+	return NewTimeSeries(key, start, end.Add(step), step, filler)
 }
 
 func NewTimeSeriesOfLength(key string, start time.Time, step time.Duration, length int, filler float64) (*TimeSeries, error) {
